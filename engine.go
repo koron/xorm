@@ -52,6 +52,31 @@ type Engine struct {
 
 	cachers    map[string]core.Cacher
 	cacherLock sync.RWMutex
+
+	timestampFormat string
+}
+
+// SetTimestampFormat updates format for core.TimeStamp. Default is
+// "2006-01-02 15:04:05", and when set empty string, it will be reseted to
+// default.
+func (engine *Engine) SetTimestampFormat(timestampFormat string) {
+	engine.setTimestampFormat(timestampFormat)
+}
+
+func (engine *Engine) setTimestampFormat(timestampFormat string) {
+	engine.timestampFormat = timestampFormat
+}
+
+// GetTimestampFormat obtains current format for core.TimeStamp.
+func (engine *Engine) GetTimestampFormat() string {
+	return engine.getTimestampFormat()
+}
+
+func (engine *Engine) getTimestampFormat() string {
+	if engine.timestampFormat == "" {
+		return "2006-01-02 15:04:05"
+	}
+	return engine.timestampFormat
 }
 
 func (engine *Engine) setCacher(tableName string, cacher core.Cacher) {
@@ -1567,8 +1592,10 @@ func (engine *Engine) formatTime(sqlTypeName string, t time.Time) (v interface{}
 		v = s[11:19]
 	case core.Date:
 		v = t.Format("2006-01-02")
-	case core.DateTime, core.TimeStamp:
+	case core.DateTime:
 		v = t.Format("2006-01-02 15:04:05")
+	case core.TimeStamp:
+		v = t.Format(engine.getTimestampFormat())
 	case core.TimeStampz:
 		if engine.dialect.DBType() == core.MSSQL {
 			v = t.Format("2006-01-02T15:04:05.9999999Z07:00")
